@@ -8,7 +8,7 @@ import moviepy.editor as mpe
 width = 1280
 height = 720
 FPS = 24
-seconds = 10
+seconds = 60
 
 fourcc = VideoWriter_fourcc(*"MP42")
 video = VideoWriter("./noise.avi", fourcc, float(FPS), (width, height))
@@ -37,9 +37,9 @@ for i in range(FPS * seconds):
     cv2.putText(
         frame, "%d" % i, (200, 200), cv2.FONT_HERSHEY_PLAIN, 10.0, white, 3, cv2.LINE_AA
     )
-    x = i % width
-    y = i - (i % width)
-    cv2.rectangle(frame, (x, y), (x + 2, y + 4), white, 4)
+
+    y, x = divmod(i, width)
+    cv2.rectangle(frame, (x, y), (x + 1, y + 1), white, 1)
     video.write(frame)
 
 video.release()

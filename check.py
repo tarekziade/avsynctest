@@ -12,7 +12,7 @@ def almost_white(color):
     int_color = RGB2Int(color)
     int_white = RGB2Int(white)
     delta = abs(int_white - int_color)
-    return delta < 256 * 256 * 256 * 0.03
+    return delta < 256 * 256 * 256 * 0.06
 
 
 def RGB2Int(value):
@@ -22,10 +22,11 @@ def RGB2Int(value):
 
 
 def assert_frame(i, frame):
+
     # we want to verify we have the white square
-    x = i % width
-    y = i - (i % width)
-    assert almost_white(frame[y][x]), frame[y][x]
+    y, x = divmod(i, width)
+    info = "frame %d %s" % (i, str(frame[y][x]))
+    assert almost_white(frame[y][x]), info
 
 
 for i, frame in enumerate(my_clip.iter_frames()):
