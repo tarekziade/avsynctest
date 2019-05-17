@@ -1,3 +1,10 @@
+"""
+    Video Generator
+
+    Creates a video we can use in our tests.
+
+    Based on moviepy and opencv (so ffmpeg underneath)
+"""
 import os
 import numpy as np
 from cv2 import VideoWriter, VideoWriter_fourcc
