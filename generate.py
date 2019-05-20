@@ -6,6 +6,8 @@
     Based on moviepy and opencv (so ffmpeg underneath)
 """
 import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import numpy as np
 from cv2 import VideoWriter, VideoWriter_fourcc
 import cv2
@@ -30,7 +32,7 @@ black = (0, 0, 0)
 
 class VideoGenerator:
     def __init__(self, filename, config):
-        self.fourcc = VideoWriter_fourcc(*"MP42")
+        self.fourcc = VideoWriter_fourcc(*"VP09")
         self.filename = filename
         self.conf = config
         self.sound_loops = int(
@@ -40,7 +42,7 @@ class VideoGenerator:
         self.height = self.conf["height"]
         self.FPS = self.conf["FPS"]
         self.video = VideoWriter(
-            filename + ".avi",
+            filename + ".mp4",
             self.fourcc,
             float(self.conf["FPS"]),
             (self.width, self.height),
@@ -89,7 +91,7 @@ class VideoGenerator:
         self.video.release()
         self.generate_sound()
         self.merge_audio_video()
-        os.remove(self.filename + ".avi")
+        os.remove(self.filename + ".mp4")
         os.remove(self.filename + ".wav")
 
     def generate_sound(self):
@@ -99,13 +101,18 @@ class VideoGenerator:
         sample_rate = self.conf["sample_rate"]
         t = np.linspace(0, beep_length, sample_rate * beep_length)
         beep = np.sin(self.conf["frequency"] * 2 * np.pi * t)
+        # fading out the signal
+        last = -1
+        for factor in range(50):
+            beep[last] = beep[last] * factor / 50.0
+            last -= 1
         silence = np.linspace(0, silence_length, sample_rate * silence_length) * 0
         sequence = np.concatenate([beep, silence] * self.sound_loops)
         wavfile.write(self.filename + ".wav", sample_rate, sequence)
 
     def merge_audio_video(self):
         print("merge video+audio")
-        clip = mpe.VideoFileClip(self.filename + ".avi")
+        clip = mpe.VideoFileClip(self.filename + ".mp4")
         final_clip = clip.set_audio(mpe.AudioFileClip(self.filename + ".wav"))
         final_clip.write_videofile(self.filename)
 
