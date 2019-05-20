@@ -9,12 +9,14 @@ white = (255, 255, 255)
 width = 1280
 height = 720
 
+# this really depends on the compression
+THRESHOLD = 0.07
 
 def almost_white(color):
     int_color = RGB2Int(color)
     int_white = RGB2Int(white)
     delta = abs(int_white - int_color)
-    return delta < 255 * 255 * 255 * 0.07
+    return delta < 255 * 255 * 255 * THRESHOLD
 
 def RGB2Int(value):
     value = list(value)
