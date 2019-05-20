@@ -16,12 +16,12 @@ from scipy.io import wavfile
 config = {
     "width": 1280,
     "height": 720,
-    "FPS": 24,
+    "FPS": 60,
     "seconds": 10,
     "sample_rate": 44100,
-    "frequency": 440,
-    "beep_length": 1,
-    "silence_length": 4,
+    "frequency": 880,
+    "beep_length": 0.01,
+    "silence_length": 0.99,
 }
 
 white = (255, 255, 255)
@@ -47,14 +47,31 @@ class VideoGenerator:
         )
 
     def generate_frame(self, color):
-        pixel = np.array(black, dtype=np.uint8)
+        pixel = np.array(color, dtype=np.uint8)
+
+        # first 5 lines are from the provided color
         line = np.array([pixel for _ in range(self.width)])
-        return np.array([line for _ in range(self.height)])
+        frame = np.array([line for _ in range(5)])
+
+        # the rest is noise
+        noise = np.random.randint(
+            0, 256, (self.height - 5, self.width, 3), dtype=np.uint8
+        )
+
+        x = 100
+        y = self.height - 100
+        radius = 75
+        cv2.circle(noise, (x, y), radius, (0, 0, 255), -1)
+        x = x + radius * 2 + 10
+        cv2.circle(noise, (x, y), radius, (0, 255, 0), -1)
+        cv2.circle(noise, (x + radius * 2 + 10, y), radius, (255, 0, 0), -1)
+
+        return np.concatenate([frame, noise])
 
     def generate(self):
         print("generate video in %s" % self.filename)
         for i in range(self.FPS * self.conf["seconds"]):
-            frame = self.generate_frame(i)
+            frame = self.generate_frame(black)
             cv2.putText(
                 frame,
                 "%d" % i,
@@ -68,6 +85,7 @@ class VideoGenerator:
             y, x = divmod(i, self.width)
             cv2.rectangle(frame, (x, y), (x + 1, y + 1), white, 1)
             self.video.write(frame)
+
         self.video.release()
         self.generate_sound()
         self.merge_audio_video()
@@ -75,7 +93,7 @@ class VideoGenerator:
         os.remove(self.filename + ".wav")
 
     def generate_sound(self):
-        print("generate audio")
+        print("generate audio (%d loops)" % self.sound_loops)
         beep_length = self.conf["beep_length"]
         silence_length = self.conf["silence_length"]
         sample_rate = self.conf["sample_rate"]
