@@ -15,21 +15,25 @@ silence_length = 0.99
 sample_rate = 44100
 seconds = 10.0
 samples = sample_rate * seconds
+
 # this really depends on the compression
-THRESHOLD = 0.08
-
-
-def almost_white(color):
-    int_color = RGB2Int(color)
-    int_white = RGB2Int(white)
-    delta = abs(int_white - int_color)
-    return delta < 255 * 255 * 255 * THRESHOLD
+# by trial and error, it's at least 92% white
+THRESHOLD = 0.92
 
 
 def RGB2Int(value):
     value = list(value)
     value.reverse()
     return (value[0] << 16) + (value[1] << 8) + value[2]
+
+
+int_white = RGB2Int(white)
+int_threshold = int_white * THRESHOLD
+
+
+def almost_white(color):
+    int_color = RGB2Int(color)
+    return int_color >= int_threshold
 
 
 def assert_frame(i, frame):
