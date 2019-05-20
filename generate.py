@@ -49,13 +49,13 @@ class VideoGenerator:
     def generate_frame(self, color):
         pixel = np.array(color, dtype=np.uint8)
 
-        # first 5 lines are from the provided color
+        # first 10 lines are from the provided color
         line = np.array([pixel for _ in range(self.width)])
-        frame = np.array([line for _ in range(5)])
+        frame = np.array([line for _ in range(10)])
 
         # the rest is noise
         noise = np.random.randint(
-            0, 256, (self.height - 5, self.width, 3), dtype=np.uint8
+            0, 256, (self.height - 10, self.width, 3), dtype=np.uint8
         )
 
         x = 100
@@ -83,7 +83,7 @@ class VideoGenerator:
                 cv2.LINE_AA,
             )
             y, x = divmod(i, self.width)
-            cv2.rectangle(frame, (x, y), (x + 1, y + 1), white, 1)
+            cv2.rectangle(frame, (x, y), (x + 1, y + 1), white, 2)
             self.video.write(frame)
 
         self.video.release()
