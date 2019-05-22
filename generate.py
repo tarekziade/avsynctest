@@ -60,6 +60,7 @@ class VideoGenerator:
             0, 256, (self.height - 10, self.width, 3), dtype=np.uint8
         )
 
+        # ... with three colored circles
         x = 100
         y = self.height - 100
         radius = 75
@@ -68,6 +69,9 @@ class VideoGenerator:
         cv2.circle(noise, (x, y), radius, (0, 255, 0), -1)
         cv2.circle(noise, (x + radius * 2 + 10, y), radius, (255, 0, 0), -1)
 
+        # and one white rectangle to find the screen
+        cv2.rectangle(noise, (self.width - 300, self.height - 300),
+                      (self.width, self.height), white, -1)
         return np.concatenate([frame, noise])
 
     def generate(self):

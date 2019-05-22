@@ -74,7 +74,27 @@ def assert_audio(i, frame):
 
 print("Checking video 🎥")
 for i, frame in enumerate(my_clip.iter_frames()):
-    assert_frame(i, frame)
+    ret, thresh = cv2.threshold(frame, 220, 255, 0)
+    gray = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite("tresh.png", gray)
+    contours, hierarchy = cv2.findContours(gray, 1, 2)
+    selected = []
+    bottom_x = bottom_y = top_x = top_y = 0
+    for x, cnt in enumerate(contours):
+        approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
+        if len(approx) == 4:
+            (x_, y_), (width_, height_), angle = cv2.minAreaRect(cnt)
+            if height_ > 100:
+                bottom_x = approx[0][0][0] + 1
+                bottom_y = approx[-1][-1][-1] + 1
+                #cv2.drawContours(frame,[cnt],0,(0,0,255), -1)
+                print("found the browser viewport")
+    top_x = bottom_x - width
+    top_y = bottom_y - height
+    cropped_img = frame[top_y:bottom_y, top_x:bottom_x]
+    #cv2.imwrite("frame-%d.png" % i, cropped_img)
+
+    assert_frame(i, cropped_img)
 
 print("Checking audio 🔊")
 for i, frame in enumerate(my_clip.audio.iter_frames()):
