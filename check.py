@@ -4,6 +4,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import moviepy.editor as mpe
 from scipy import misc
 import cv2
+import numpy as np
 
 my_clip = mpe.VideoFileClip("noise.mp4")
 FPS = 60.0
@@ -72,33 +73,40 @@ def assert_audio(i, frame):
         assert frame[0] < 0.011 and frame[1] < 0.011, frame
 
 
-print("Checking video 🎥")
-for i, frame in enumerate(my_clip.iter_frames()):
-    ret, thresh = cv2.threshold(frame, 220, 255, 0)
+
+def find_viewport(frame):
+    ret, thresh = cv2.threshold(frame, 230, 255, 0)
     gray = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
     cv2.imwrite("tresh.png", gray)
     contours, hierarchy = cv2.findContours(gray, 1, 2)
-    selected = []
     bottom_x = bottom_y = top_x = top_y = 0
     for x, cnt in enumerate(contours):
         approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
         if len(approx) == 4:
-            (x_, y_), (width_, height_), angle = cv2.minAreaRect(cnt)
-            if height_ > 100:
-                bottom_x = approx[0][0][0] + 1
-                bottom_y = approx[-1][-1][-1] + 1
-                #cv2.drawContours(frame,[cnt],0,(0,0,255), -1)
-                print("found the browser viewport")
-    top_x = bottom_x - width
-    top_y = bottom_y - height
-    cropped_img = frame[top_y:bottom_y, top_x:bottom_x]
-    #cv2.imwrite("frame-%d.png" % i, cropped_img)
+            x_, y_, w_, h_ = cv2.boundingRect(approx)
+            if w_ > 100:
+                x_ = x_ - (width - 300) + 1
+                if x_ < 0:    # XXX meh
+                    x_ = 0
+                y_ = y_ - (height - 300) - 10    # meh
+                if y_ < 0:    # XXX meh
+                    y_ = 0
+                return frame[y_:y_+height, x_:x_+width]
 
-    assert_frame(i, cropped_img)
+print("Checking video 🎥")
+first_frame = -1
+for i, frame in enumerate(my_clip.iter_frames()):
+    cropped_frame = find_viewport(frame)
+    if cropped_frame is None:
+        continue
+    if first_frame == -1:
+        print("Found first image of browser viewport at %d" % i)
+        first_frame = i
+    assert_frame(i, cropped_frame)
 
 print("Checking audio 🔊")
 for i, frame in enumerate(my_clip.audio.iter_frames()):
-    if i >= 441000:
+    if i >= 44100:
         continue  # why do we have more?
     assert_audio(i, frame)
 
