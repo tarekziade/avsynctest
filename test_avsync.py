@@ -9,11 +9,15 @@ from marionette_harness.runtests import cli
 _CMD = ["ffmpeg",
         #"-loglevel",  "panic",
         "-y", "-f",  "avfoundation",
-        "-framerate",  "24" , "-i",  '1', "-t", "30",
+        "-framerate",  "60" , "-i",  '1', "-t", "15",
 "-crf",  "0",  "-preset",  "ultrafast", "output.mkv"]
 
+_CMD = ["ffmpeg", "-y", "-t", "15", "-f", "avfoundation",  "-i",  "1",
+        "-crf", "0", "-rtbufsize", "10000k", "-c:v", "libx264", "-preset" , "ultrafast",
+        "-framerate", "60",
+        "output.mkv"]
 
-_B = "/Users/tarek/Dev/gecko/mozilla-central-opt/objdir-osx/dist/NightlyDebug.app/Contents/MacOS/firefox"
+_B = "/Users/tarek/Dev/gecko/mozilla-central-opt/objdir-osx/dist/Nightly.app/Contents/MacOS/firefox"
 url = "file:///Users/tarek/Dev/github.com/avsynctest/noise.mp4"
 
 
@@ -25,16 +29,16 @@ class VideoTest(MarionetteTestCase):
 
     def test_capture(self):
         self.marionette.start_session()
-        self.marionette.navigate("https://mozilla.org")
         p = subprocess.Popen(_CMD, stdout=subprocess.PIPE)
-        time.sleep(1.)
+        time.sleep(2.)
+        self.marionette.set_window_rect(height=720, width=1280)
         self.marionette.navigate(url)
-        time.sleep(60)
+        time.sleep(20)
         p.terminate()
         self.marionette.delete_session()
 
 
 if __name__ == '__main__':
     import sys
-    sys.argv.extend(['test_avsync.py', '--binary', _B])
+    sys.argv.extend(['test_avsync.py', '--binary', _B, '--app', 'fxdesktop'])
     cli()
